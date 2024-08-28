@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+  <properties resource="db.properties"/>
+  <typeAliases>
+  	<typeAlias type="kr.ac.kopo.vo.GoodsInfo" alias="goodsInfoVO"/>
+  	<typeAlias type="kr.ac.kopo.vo.GoodsPicture" alias="goodsPictureVO"/>
+  	<typeAlias type="kr.ac.kopo.vo.Review" alias="reviewVO"/>
+  	<typeAlias type="kr.ac.kopo.vo.Search" alias="searchVO"/>
+  	<typeAlias type="kr.ac.kopo.vo.UserInfo" alias="userInfoVO"/>
+  	<typeAlias type="kr.ac.kopo.vo.BasketItem" alias="basketItemVO"/>
+  	<typeAlias type="kr.ac.kopo.vo.Receipt" alias="receiptVO"/>
+  </typeAliases>
+  <environments default="development">
+    <environment id="development">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.password}"/>
+      </dataSource>
+    </environment>
+  </environments>
+  <mappers>
+    <mapper resource="/goodsMapper.xml"/>
+  </mappers>
+</configuration>
