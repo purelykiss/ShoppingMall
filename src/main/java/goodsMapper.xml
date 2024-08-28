@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dao.GoodsDAO">		<!--네임스페이스가 패키지, 보통 DAO의 이름을 많이 씀, 보통 저 앞에 kr.ac.kopo.도 쓰지만 길면 도매인이름은 뺀다. -->
+	<resultMap type="goodsInfoVO" id="goodsInfoMap">
+	</resultMap>
+	<resultMap type="goodsPictureVO" id="goodsPictureMap">
+	</resultMap>
+	<resultMap type="reviewVO" id="reviewMap">
+	</resultMap>
+	<resultMap type="searchVO" id="searchMap">
+	</resultMap>
+	<resultMap type="userInfoVO" id="userInfoMap">
+	</resultMap>
+	<resultMap type="receiptVO" id="receiptMap">
+	</resultMap>
+	
+	
+	<select id="selectGoodsInfo4Male" resultMap="goodsInfoMap" resultType="map">
+		select *
+		from(
+			select *
+			from SHOP_TBL_GOODSINFO
+			where gender in ('m', 'M') and isselling in ('t', 'T')
+			order by sellcode desc
+		)
+		where rownum &lt;= 4
+	</select>
+	
+	<select id="selectGoodsPicture4Male" resultType="goodsPictureVO">
+		select pic.PICTURECODE , pic.FILENAME , pic.SELLCODE , pic.PICTUREPATH , pic.PICTURETYPE , pic.PRIORITY , pic.WRITTENDATE , pic.MODIFIEDDATE 
+		  from shop_tbl_goodspicture pic
+			join(
+					select *
+					from SHOP_TBL_GOODSINFO
+					where gender in ('m', 'M') and isselling in ('t', 'T')
+				) m_1
+		on pic.sellcode = m_1.sellcode
+		where pic.picturetype in ('f', 'F')
+		order by sellcode DESC
+	</select>
+	
+	<select id="selectGoodsInfo4Female" resultMap="goodsInfoMap" resultType="map">
+		select *
+		from(
+			select *
+			from SHOP_TBL_GOODSINFO
+			where gender in ('f', 'F') and isselling in ('t', 'T')
+			order by sellcode desc
+		)
+		where rownum &lt;= 4
+	</select>
+	
+	<select id="selectGoodsPicture4Female" resultType="goodsPictureVO">
+		select pic.PICTURECODE , pic.FILENAME , pic.SELLCODE , pic.PICTUREPATH , pic.PICTURETYPE , pic.PRIORITY , pic.WRITTENDATE , pic.MODIFIEDDATE
+		  from shop_tbl_goodspicture pic
+			join(
+					select *
+					from SHOP_TBL_GOODSINFO
+					where gender in ('f', 'F') and isselling in ('t', 'T')
+				) m_1
+		on pic.sellcode = m_1.sellcode
+		where pic.picturetype in ('f', 'F')
+		order by sellcode DESC
+	</select>
+	
+	<select id="selectGoodsInfo4Children" resultMap="goodsInfoMap" resultType="map">
+		select *
+		from(
+			select *
+			from SHOP_TBL_GOODSINFO
+			where tag like '%아동복%' and isselling in ('t', 'T')
+			order by sellcode desc
+		)
+		where rownum &lt;= 4
+	</select>
+	
+	<select id="selectGoodsPicture4Children" resultType="goodsPictureVO">
+		select pic.PICTURECODE , pic.FILENAME , pic.SELLCODE , pic.PICTUREPATH , pic.PICTURETYPE , pic.PRIORITY , pic.WRITTENDATE , pic.MODIFIEDDATE
+		  from shop_tbl_goodspicture pic
+			join(
+					select *
+					from SHOP_TBL_GOODSINFO
+					where tag like '%아동복%' and isselling in ('t', 'T')
+				) m_1
+		on pic.sellcode = m_1.sellcode
+		where pic.picturetype in ('f', 'F')
+		order by sellcode DESC
+	</select>
+	
+	<select id="selectGoodsInfoById" parameterType="String" resultType="goodsInfoVO">
+		select *
+			from shop_tbl_goodsinfo
+		where sellcode = #{id}
+	</select>
+	
+	<select id="selectGoodsPictureById" parameterType="String" resultType="goodsPictureVO">
+		select *
+			from shop_tbl_goodspicture
+		where sellcode = #{id}
+		order by
+			case picturetype
+				when 'f' then 1
+				when 'F' then 1
+				when 'p' then 2
+				when 'P' then 2
+				else 3
+				end
+			,priority 
+	</select>
+	
+	<select id="selectReviewBySellcode" parameterType="String" resultType="reviewVO">
+			select str.*
+				from shop_tbl_review str
+			WHERE  sellcode = #{id}
+			order by
+				CASE 
+					WHEN score IN (5,4) THEN 1
+					WHEN score IN (3,2) THEN 2
+					ELSE 3
+				end
+				,likecount desc
+				,viewcount desc
+	</select>
+	
+	<select id="selectgoodsInfoCountBySearch" parameterType="searchVO" resultType="searchVO">
+		select count(*) as totalcontents
+			from
+			(	
+				select *
+					from shop_tbl_goodsinfo
+				<where>
+					<if test="keyword != null and keyword.size > 0">
+						(
+						<foreach collection="keyword" item="item" open="(" separator="and" close=")">
+							goodsname like '%${item}%'
+						</foreach>
+						or 
+						<foreach collection="keyword" item="item" open="(" separator="and" close=")">				
+							tag like '%${item}%'
+						</foreach>
+						)
+					</if>
+					<if test="gender == 'M'.toString() or gender == 'F'.toString() or gender == 'FM'.toString()">
+						and gender='${gender}'
+					</if>
+					<if test="seasonyear != 0 and seasonyear &gt; 1980 and seasonyear &gt;= 2024">
+						and seasonyear=#{seasonyear}
+					</if>
+					<if test="season == 'SS' or season == 'SF' or season == 'FW' or season == 'FS' or season == 'ALL'">
+						and season=#{season}
+					</if>
+					<if test="maxprice != 0">
+						and goodsprice &lt;= #{maxprice}
+					</if>
+					<if test="minprice != 0 and minprice &lt;= maxprice">
+						and goodsprice &gt;= #{minprice}
+					</if>
+				</where>
+				order by sellcode desc
+			) stg
+	</select>
+	
+	<select id="selectgoodsInfoBySearch" parameterType="searchVO" resultType="goodsInfoVO">
+		select sellcode, goodsname, goodscode, brand, seasonyear, season, gender, goodsprice, tag, stock, isselling, writer, writtendate, modifier, modifieddate
+			from
+			(	
+				select rownum rn, m_1.*
+				from
+				(
+					select stg.*
+						from shop_tbl_goodsinfo stg
+					<where>
+						<if test="keyword != null and keyword.size > 0">
+							(
+							<foreach collection="keyword" item="item" open="(" separator="and" close=")">
+								goodsname like '%${item}%'
+							</foreach>
+							or 
+							<foreach collection="keyword" item="item" open="(" separator="and" close=")">				
+								tag like '%${item}%'
+							</foreach>
+							)
+						</if>
+						<if test="gender == 'M'.toString() or gender == 'F'.toString() or gender == 'FM'.toString()">
+							and gender=#{gender}
+						</if>
+						<if test="seasonyear != 0 and seasonyear gt 1980 and seasonyear &gt;= 2024">
+							and seasonyear=#{seasonyear}
+						</if>
+						<if test="season == 'SS' or season == 'SF' or season == 'FW' or season == 'FS' or season == 'ALL'">
+							and season=#{season}
+						</if>
+						<if test="maxprice != 0">
+							and goodsprice &lt;= #{maxprice}
+						</if>
+						<if test="minprice != 0 and minprice &lt;= maxprice">
+							and goodsprice &gt;= #{minprice}
+						</if>
+					</where>
+					order by sellcode desc
+				)m_1
+			)
+		where
+			rn &gt;= (${curpage}-1) * ${pagecontents} + 1
+			and rn &lt;= ${curpage} * ${pagecontents}
+	</select>
+	
+	<select id="selectgoodsPictureBySearch" parameterType="searchVO" resultType="goodsPictureVO">
+		select picturecode, filename, sellcode, picturepath, picturetype, priority, writtendate, modifieddate
+			from
+			(	
+				select rownum rn, m_1.*
+				from
+				(
+					select stp.*
+						from shop_tbl_goodsinfo stg
+						join shop_tbl_goodspicture stp
+							on stg.sellcode = stp.sellcode
+					<where>
+						stp.picturetype = 'F'
+						<if test="keyword != null and keyword.size > 0">
+							and(
+							<foreach collection="keyword" item="item" open="(" separator="and" close=")">
+								goodsname like '%${item}%'
+							</foreach>
+							or 
+							<foreach collection="keyword" item="item" open="(" separator="and" close=")">				
+								tag like '%${item}%'
+							</foreach>
+							)
+						</if>
+						<if test="gender == 'M'.toString() or gender == 'F'.toString() or gender == 'FM'.toString()">
+							and gender=#{gender}
+						</if>
+						<if test="seasonyear != 0 and seasonyear gt 1980 and seasonyear &gt;= 2024">
+							and seasonyear=#{seasonyear}
+						</if>
+						<if test="season == 'SS' or season == 'SF' or season == 'FW' or season == 'FS' or season == 'ALL'">
+							and season=#{season}
+						</if>
+						<if test="maxprice != 0">
+							and goodsprice &lt;= #{maxprice}
+						</if>
+						<if test="minprice != 0 and minprice &lt;= maxprice">
+							and goodsprice &gt;= #{minprice}
+						</if>
+					</where>
+					order by stp.sellcode desc
+				)m_1
+			) stg
+		where
+			rn &gt;= (${curpage}-1) * ${pagecontents} + 1
+			and rn &lt;= ${curpage} * ${pagecontents}
+	</select>
+	
+	<select id="selectMemberById" parameterType="String" resultType="userInfoVO">
+		select *
+		from userinfo@shop_center_link
+		where id = #{id}
+	</select>
+	
+	<insert id="insertMember" parameterType="userInfoVO" statementType="CALLABLE">
+        call sign_up_ids(#{id},
+                         #{password},
+                         #{name},
+                         #{phone},
+                         #{gender},
+                         #{postcode},
+                         #{homeaddress},
+                         #{detailaddress},
+                         #{email})
+    </insert>
+	
+	<select id="checkMember" parameterType="userInfoVO" resultType="int">
+		select count(*)
+		from userinfo@shop_center_link
+		where id = #{id}
+		and password = #{password}
+	</select>
+	
+	<insert id="insertBasketItem" parameterType="basketItemVO">
+		insert into shop_tbl_basketitem(id, sellcode, purchasequantity)
+		values('${id}', TO_CHAR(${sellcode}, 'FM0000000000'), '${purchasequantity}')
+		
+	</insert>
+	
+	<select id="selectBasketItemById" parameterType="String" resultType="basketItemVO">
+		select *
+		from shop_tbl_basketitem
+		where id = #{id}
+	</select>
+	
+	<select id="selectBasketItemCountBySearch" parameterType="searchVO" resultType="searchVO">
+		select count(*) as totalcontents
+		from shop_tbl_basketitem
+		where id = #{id}
+	</select>
+	
+	<select id="selectBasketItemBySearch" parameterType="SearchVO" resultType="basketItemVO">
+		select stb.*
+		from shop_tbl_basketitem stb
+			join
+			(
+				select rownum rn, m_1.*
+				from
+				(
+					select *
+					from shop_tbl_basketitem
+					where id = #{id}
+					order by basketitemcode asc
+				)m_1
+			)m_2
+			on stb.basketitemcode = m_2.basketitemcode
+		where rn &gt;= (${curpage}-1) * ${pagecontents} + 1
+		and rn &lt;= ${curpage} * ${pagecontents}
+		order by rn asc
+	</select>
+	
+	<select id="selectgoodsInfoByBasketById" parameterType="String" resultType="goodsInfoVO">
+		select stg.*
+		from SHOP_TBL_GOODSINFO stg
+			join
+			(
+				select rownum rn, m_1.*
+				from
+				(
+					select *
+					from shop_tbl_basketitem
+					where id = #{id}
+					order by basketitemcode asc
+				)m_1
+			)m_2
+			on stg.sellcode = m_2.sellcode
+		where rn &gt;= (${curpage}-1) * ${pagecontents} + 1
+		and rn &lt;= ${curpage} * ${pagecontents}
+		order by rn asc
+	</select>
+	
+	<select id="selectgoodsPictureByBasketById" parameterType="String" resultType="goodsPictureVO">
+		select stg.*
+		from shop_tbl_goodspicture stg
+			join
+			(
+				select rownum rn, m_1.*
+				from
+				(
+					select *
+					from shop_tbl_basketitem
+					where id = #{id}
+					order by basketitemcode asc
+				)m_1
+			)m_2
+			on stg.sellcode = m_2.sellcode
+		where rn &gt;= (${curpage}-1) * ${pagecontents} + 1
+		and rn &lt;= ${curpage} * ${pagecontents}
+		AND stg.PICTURETYPE ='F'
+		order by rn asc
+	</select>
+	
+	<select id="selectgoodsPriceByBasketById" parameterType="String" resultType="int">
+		select sum(goodsprice * purchasequantity)
+		from SHOP_TBL_GOODSINFO stg
+			join
+			(
+				select m_1.*
+				from
+				(
+					select *
+					from shop_tbl_basketitem
+					where id = #{id}
+				)m_1
+			)m_2
+			on stg.sellcode = m_2.sellcode
+	</select>
+	
+	<delete id="deleteBasketItemById" parameterType="String">
+		DELETE
+		FROM SHOP_TBL_BASKETITEM
+		WHERE id=#{id}
+	</delete>
+	
+	<delete id="deleteBasketItemByCode" parameterType="basketItemVO">
+		DELETE
+		FROM SHOP_TBL_BASKETITEM
+		WHERE basketitemcode=#{basketitemcode}
+		AND id=#{id}
+	</delete>
+	
+	<update id="subtractStockById" parameterType="String">
+		UPDATE SHOP_TBL_GOODSINFO stg
+			SET stg.stock  = (SELECT (stock - purchasequantity) FROM SHOP_TBL_BASKETITEM stb  WHERE stb.sellcode = stg.sellcode AND stb.id = #{id})
+		WHERE stg.sellcode IN (
+ 								SELECT stg.SELLCODE
+ 								FROM SHOP_TBL_GOODSINFO stg, SHOP_TBL_BASKETITEM stb
+ 								WHERE stg.sellcode = stb.sellcode
+ 								AND stb.id = #{id}
+ 								)
+	</update>
+	
+	<insert id="insertReceiptById" parameterType="String">
+		INSERT INTO shop_tbl_receipt (PURCHASECODE, ID, SELLCODE, PURCHASEPRICE, PURCHASEQUANTITY, ISREFUND)
+		SELECT TO_CHAR(shop_seq_receipt_cd.NEXTVAL, 'FM0000000000') AS purchasecode
+			,stb.id AS id
+			,stg.sellcode AS sellcode
+			,(stb.purchasequantity * stg.goodsprice) AS PURCHASEPRICE
+			,stb.purchasequantity AS purchasequantity
+			,'F' AS isrefund
+		FROM SHOP_TBL_GOODSINFO stg, SHOP_TBL_BASKETITEM stb 
+		WHERE stg.sellcode = stb.sellcode
+		AND stb.id = #{id}
+	</insert>
+	
+	<select id="selectReceiptCountBySearch" parameterType="searchVO" resultType="searchVO">
+		select count(*) as totalcontents
+			from
+			(	
+				select *
+					from shop_tbl_receipt
+				where id = #{id}
+			)
+	</select>
+	
+	<select id="selectReceiptBySearch" parameterType="searchVO" resultType="receiptVO">
+		select PURCHASECODE, ID, SELLCODE, PURCHASEPRICE, PURCHASEQUANTITY, ISREFUND, PURCHASEDATE, MODIFIER, MODIFIEDDATE
+			from
+			(	
+				select rownum rn, m_1.*
+				from
+				(
+					select stg.*
+						from shop_tbl_receipt stg
+					where id = #{id}
+					order by PURCHASECODE desc
+				)m_1
+			)
+		where
+			rn &gt;= (${curpage}-1) * ${pagecontents} + 1
+			and rn &lt;= ${curpage} * ${pagecontents}
+	</select>
+	
+	<select id="selectgoodsInfoByReceiptBySearch" parameterType="searchVO" resultType="goodsInfoVO">
+		select stg.*
+			from
+			(	
+				select rownum rn, m_1.*
+				from
+				(
+					select stg.*
+						from shop_tbl_receipt str
+							,shop_tbl_goodsinfo stg
+					where str.id = #{id}
+						and str.sellcode = stg.sellcode
+					order by str.PURCHASECODE desc
+				)m_1
+			)m_2, shop_tbl_goodsinfo stg
+		where
+			m_2.sellcode = stg.sellcode
+			and rn &gt;= (${curpage}-1) * ${pagecontents} + 1
+			and rn &lt;= ${curpage} * ${pagecontents}
+		order by rn
+	</select>
+	
+	<select id="selectgoodsPictureByReceiptBySearch" parameterType="searchVO" resultType="goodsPictureVO">
+		select stp.*
+			from
+			(	
+				select rownum rn, m_1.*
+				from
+				(
+					select stp.*
+						from shop_tbl_receipt str
+							,shop_tbl_goodsPicture stp
+					where str.id = #{id}
+						and str.sellcode = stp.sellcode
+						and stp.picturetype = 'F'
+					order by str.PURCHASECODE desc
+				)m_1
+			)m_2, shop_tbl_goodsPicture stp
+		where
+			m_2.picturecode = stp.picturecode
+			and rn &gt;= (${curpage}-1) * ${pagecontents} + 1
+			and rn &lt;= ${curpage} * ${pagecontents}
+		order by rn
+	</select>
+</mapper>
