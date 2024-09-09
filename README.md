@@ -11,7 +11,7 @@
 `Database` Oracle 21c XE
 
 ## 3. ERD 설계
-<!-- ![포폴용_은행](https://github.com/water4360/web-Hari-Bank/assets/121849929/61d32f86-f7ac-4d37-83c3-507ad795f240) -->
+![포폴용_쇼핑몰](https://github.com/user-attachments/assets/62932768-24e5-4921-936b-649edf1f1771)
 
 
 ## 4. 핵심 기능
